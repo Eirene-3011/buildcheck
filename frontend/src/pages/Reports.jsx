@@ -102,12 +102,12 @@ const SectionCard = ({ title, children, tone = 'default', accentFrom, accentTo, 
     <div className={glassCard} style={{ background: glassCardBg }}>
       <div className="h-0.5 w-full rounded-t-2xl"
         style={{ background: `linear-gradient(90deg, ${accent.from}, ${accent.to}55)` }} />
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         {collapsible ? (
           <button type="button" onClick={() => setOpen((p) => !p)}
             className="w-full flex items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10 hover:border-white/20 transition-colors group">
             <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white/50 group-hover:text-white/70 transition-colors">{title}</span>
-            <svg className={`w-4 h-4 text-white/30 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-4 h-4 text-white/30 transition-transform duration-300 flex-shrink-0 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
@@ -122,20 +122,22 @@ const SectionCard = ({ title, children, tone = 'default', accentFrom, accentTo, 
   );
 };
 
+/* KV — single column on mobile, side-by-side on sm+ */
 const KV = ({ k, v }) => (
-  <div className="flex gap-3 text-sm min-w-0">
-    <div className="text-white/35 text-[11px] font-bold uppercase tracking-widest min-w-[100px] sm:min-w-[140px] flex-shrink-0 pt-0.5">{k}</div>
+  <div className="flex flex-col sm:flex-row sm:gap-3 text-sm min-w-0 gap-0.5">
+    <div className="text-white/35 text-[10px] font-bold uppercase tracking-widest sm:min-w-[140px] flex-shrink-0">{k}</div>
     <div className="text-white/80 font-semibold text-[13px] break-words">{v ?? '\u2014'}</div>
   </div>
 );
 
+/* Table — always wrapped in a horizontal scroll container */
 const TableSimple = ({ headers, rows }) => (
-  <div className="overflow-x-auto rounded-xl border border-white/8">
-    <table className="w-full text-xs">
+  <div className="overflow-x-auto rounded-xl border border-white/8 -mx-0">
+    <table className="w-full text-xs min-w-[400px]">
       <thead>
         <tr style={{ background: 'rgba(255,255,255,0.06)' }}>
           {headers.map((h) => (
-            <th key={h} className="text-left px-3 py-2.5 text-[9px] font-black uppercase tracking-widest text-white/40 border-b border-white/8">{h}</th>
+            <th key={h} className="text-left px-3 py-2.5 text-[9px] font-black uppercase tracking-widest text-white/40 border-b border-white/8 whitespace-nowrap">{h}</th>
           ))}
         </tr>
       </thead>
@@ -157,32 +159,31 @@ const TableSimple = ({ headers, rows }) => (
 /* ------------------------------------------------------------------ */
 
 const KpiCard = ({ label, value, color, icon }) => (
-  <div className={`${glassCard} p-4 flex flex-col items-center justify-center text-center gap-1`} style={{ background: glassCardBg }}>
+  <div className={`${glassCard} p-3 sm:p-4 flex flex-col items-center justify-center text-center gap-1`} style={{ background: glassCardBg }}>
     {icon && <span className="text-white/20 mb-0.5">{icon}</span>}
-    <div className="text-2xl font-black" style={{
+    <div className="text-xl sm:text-2xl font-black" style={{
       background: `linear-gradient(135deg, ${color}, ${color}aa)`,
       WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
     }}>{value}</div>
-    <div className="text-[9px] font-black uppercase tracking-widest text-white/30">{label}</div>
+    <div className="text-[9px] font-black uppercase tracking-widest text-white/30 leading-tight">{label}</div>
   </div>
 );
 
 /* ================================================================== */
-/*  PDF EXPORT — Enhanced Professional Layout                          */
+/*  PDF EXPORT — unchanged from original                              */
 /* ================================================================== */
 
 function buildPDF(report, analytics) {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
 
-  const PW = doc.internal.pageSize.getWidth();   // 595.28
-  const PH = doc.internal.pageSize.getHeight();  // 841.89
+  const PW = doc.internal.pageSize.getWidth();
+  const PH = doc.internal.pageSize.getHeight();
   const ML = 36;
   const MR = 36;
   const MT = 62;
   const MB = 52;
   const CW = PW - ML - MR;
 
-  /* ── Palette ── */
   const C = {
     navy:        [10,  30,  80],
     navyMid:     [22,  58, 138],
@@ -218,7 +219,6 @@ function buildPDF(report, analytics) {
   let y = MT;
   let currentPage = 1;
 
-  /* ── Page overflow guard ── */
   function ensure(neededH) {
     if (y + neededH > PH - MB - 10) {
       drawFooter();
@@ -229,7 +229,6 @@ function buildPDF(report, analytics) {
     }
   }
 
-  /* ── HEADER ── */
   function drawHeader() {
     doc.setFillColor(...C.navy);
     doc.rect(0, 0, PW, 48, 'F');
@@ -263,7 +262,6 @@ function buildPDF(report, analytics) {
     y = MT;
   }
 
-  /* ── FOOTER ── */
   function drawFooter() {
     const pg = doc.internal.getNumberOfPages();
     doc.setFillColor(...C.bgAlt);
@@ -287,7 +285,6 @@ function buildPDF(report, analytics) {
     doc.text(`Page ${pg}`, PW - MR, PH - MB + 20, { align: 'right' });
   }
 
-  /* ── Wrapped text writer ── */
   function writeText(text, { x = ML, size = 9, bold = false, color = C.ink, maxW = CW, lineH } = {}) {
     doc.setFont('helvetica', bold ? 'bold' : 'normal');
     doc.setFontSize(size);
@@ -301,7 +298,6 @@ function buildPDF(report, analytics) {
     });
   }
 
-  /* ── Section heading bar ── */
   function sectionHeading(label, colorLeft = C.navy, colorRight = null) {
     ensure(34);
     y += 4;
@@ -320,7 +316,6 @@ function buildPDF(report, analytics) {
     y += 28;
   }
 
-  /* ── Sub-heading (smaller) ── */
   function subHeading(label, color = C.slate) {
     ensure(20);
     doc.setFont('helvetica', 'bold');
@@ -334,7 +329,6 @@ function buildPDF(report, analytics) {
     y += 6;
   }
 
-  /* ── Horizontal divider ── */
   function divider(before = 8, after = 8) {
     y += before;
     doc.setDrawColor(...C.hairline);
@@ -343,7 +337,6 @@ function buildPDF(report, analytics) {
     y += after;
   }
 
-  /* ── Two-column KV grid ── */
   function kvGrid(pairs, cols = 2) {
     const colW  = CW / cols;
     const keyW  = 110;
@@ -401,7 +394,6 @@ function buildPDF(report, analytics) {
     y += 8;
   }
 
-  /* ── Styled table ── */
   function table(headers, rows, colWidths) {
     const cw       = colWidths || headers.map(() => Math.floor(CW / headers.length));
     const headH    = 22;
@@ -481,7 +473,6 @@ function buildPDF(report, analytics) {
     y += 12;
   }
 
-  /* ── KPI stat boxes (cover page) ── */
   function statBoxRow(items) {
     const count = items.length;
     const bW    = CW / count;
@@ -513,7 +504,6 @@ function buildPDF(report, analytics) {
     y += bH + 18;
   }
 
-  /* ── Badge row ── */
   function badgeRow(items) {
     const count = items.length;
     const bW    = CW / count;
@@ -543,7 +533,6 @@ function buildPDF(report, analytics) {
     y += bH + 12;
   }
 
-  /* ── Violation card ── */
   function violationCard(v, idx) {
     const acked   = v.acknowledged;
     const ackC    = acked ? C.green : C.amber;
@@ -624,7 +613,6 @@ function buildPDF(report, analytics) {
     y += 18;
   }
 
-  /* ── Note / info box ── */
   function noteBox(text, color = C.indigo) {
     const bg    = color.map((c) => Math.min(255, c + 210));
     const lines = doc.splitTextToSize(safeStr(text), CW - 26);
@@ -643,7 +631,6 @@ function buildPDF(report, analytics) {
     y += bH + 10;
   }
 
-  /* ── Budget progress bar ── */
   function budgetBar(approved, contract) {
     if (!approved || !contract) return;
     ensure(52);
@@ -674,12 +661,7 @@ function buildPDF(report, analytics) {
     y += 14;
   }
 
-  /* ============================================================= */
-  /*  START BUILDING THE PDF                                        */
-  /* ============================================================= */
-
   drawHeader();
-
   y += 16;
 
   doc.setFont('helvetica', 'bold');
@@ -1058,7 +1040,7 @@ function buildPDF(report, analytics) {
 /*  Input / Select style                                               */
 /* ------------------------------------------------------------------ */
 
-const inputClass = `block w-full px-4 py-3 rounded-xl text-white font-semibold placeholder:text-white/40
+const inputClass = `block w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-white font-semibold placeholder:text-white/40
   focus:outline-none focus:ring-2 focus:ring-indigo-500/70 focus:border-indigo-400/60
   transition-all duration-300 hover:border-white/30 text-sm
   bg-slate-700/60 backdrop-blur-md border border-white/20`;
@@ -1070,17 +1052,22 @@ const selectClass = `${inputClass} appearance-none cursor-pointer [&>option]:bg-
 
 const DeleteModal = ({ projectName, onConfirm, onCancel, isDeleting }) => (
   <div
-    className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
     style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
   >
     <div
-      className="w-full max-w-md rounded-2xl border border-rose-500/30 p-6"
+      className="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl border border-rose-500/30 p-5 sm:p-6"
       style={{
         background: 'linear-gradient(160deg, rgba(20,10,15,0.98) 0%, rgba(30,10,15,0.95) 100%)',
         boxShadow: '0 0 60px rgba(244,63,94,0.2), 0 25px 50px rgba(0,0,0,0.6)',
         animation: 'slideUp 0.2s ease-out both',
       }}
     >
+      {/* Drag handle on mobile */}
+      <div className="flex justify-center mb-4 sm:hidden">
+        <div className="w-10 h-1 rounded-full bg-white/20" />
+      </div>
+
       {/* Icon */}
       <div className="flex items-center justify-center w-12 h-12 rounded-2xl border border-rose-500/30 mx-auto mb-4"
         style={{ background: 'rgba(244,63,94,0.12)' }}>
@@ -1090,24 +1077,21 @@ const DeleteModal = ({ projectName, onConfirm, onCancel, isDeleting }) => (
         </svg>
       </div>
 
-      {/* Title */}
       <h3 className="text-base font-black text-white text-center mb-2">Delete Project Records</h3>
 
-      {/* Body */}
       <p className="text-sm text-white/50 text-center leading-relaxed mb-1">
         You are about to permanently delete all records for:
       </p>
       <p className="text-sm font-black text-rose-300 text-center mb-4 px-2 break-words">
         {projectName}
       </p>
-      <div className="rounded-xl border border-rose-500/20 px-4 py-3 mb-6"
+      <div className="rounded-xl border border-rose-500/20 px-4 py-3 mb-5 sm:mb-6"
         style={{ background: 'rgba(244,63,94,0.08)' }}>
         <p className="text-xs text-white/50 leading-relaxed">
           This will permanently delete the project and <span className="text-rose-300 font-bold">all associated inspections, violations, photos, manpower, safety, and environmental records</span>. This action <span className="text-rose-300 font-bold">cannot be undone</span>.
         </p>
       </div>
 
-      {/* Actions */}
       <div className="flex gap-3">
         <button
           onClick={onCancel}
@@ -1165,6 +1149,9 @@ export default function Reports() {
   const [view, setView] = useState('summary');
   const [openId, setOpenId] = useState(null);
 
+  // Mobile sidebar toggle
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   // Delete state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -1189,7 +1176,6 @@ export default function Reports() {
       setShowDeleteModal(false);
       setReport(null);
       setParams({});
-      // Refresh project list
       const r = await api.get('/projects');
       setProjects(r.data);
     } catch (err) {
@@ -1236,7 +1222,7 @@ export default function Reports() {
   }, [report]);
 
   const FieldLabel = ({ children }) => (
-    <label className="block text-[10px] font-black text-white/50 uppercase tracking-[0.18em] ml-0.5 mb-2">
+    <label className="block text-[10px] font-black text-white/50 uppercase tracking-[0.18em] ml-0.5 mb-1.5">
       {children}
     </label>
   );
@@ -1264,6 +1250,107 @@ export default function Reports() {
 
   const selectedProject = report?.project;
 
+  /* Sidebar content extracted so it can be used in both drawer and desktop */
+  const SidebarContent = () => (
+    <>
+      {selectedProject ? (
+        <div className={`${glassCard} p-4`} style={{ background: glassCardBg }}>
+          <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-3">Active Project</p>
+          <p className="text-xs font-black text-white/80 leading-snug mb-2">{selectedProject.name}</p>
+          <div className="flex items-center gap-2 mb-2">
+            <Pill value={selectedProject.project_status}>{selectedProject.project_status}</Pill>
+          </div>
+          <div className="space-y-1 mt-3">
+            {[
+              ['Ref',      selectedProject.ref_number],
+              ['Year',     selectedProject.year],
+              ['Duration', selectedProject.duration],
+            ].map(([k, v]) => (
+              <div key={k} className="flex justify-between text-[10px]">
+                <span className="text-white/30 font-bold uppercase tracking-widest">{k}</span>
+                <span className="text-white/60 font-bold">{v || '\u2014'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className={`${glassCard} p-4`} style={{ background: glassCardBg }}>
+          <p className="text-[9px] font-black text-white/25 uppercase tracking-widest mb-2">No project selected</p>
+          <p className="text-[11px] text-white/25">Pick a project to view its report.</p>
+        </div>
+      )}
+
+      {analytics && (
+        <div className={`${glassCard} p-4 flex items-center gap-3`} style={{ background: glassCardBg }}>
+          <AckRing pct={analytics.ackPct} />
+          <div>
+            <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Ack. Rate</p>
+            <p className="text-xs font-black text-white/70 mt-0.5">
+              {report.summary.acknowledged_violations}/{report.summary.total_violations} violations
+            </p>
+          </div>
+        </div>
+      )}
+
+      {report && (
+        <div className={`${glassCard} overflow-hidden`} style={{ background: glassCardBg }}>
+          <p className="text-[9px] font-black text-white/30 uppercase tracking-widest px-4 pt-4 pb-2">View Mode</p>
+          {[
+            { key: 'summary',  label: 'Summary',  icon: <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
+            { key: 'detailed', label: 'Detailed', icon: <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg> },
+          ].map(({ key, label, icon }) => {
+            const active = view === key;
+            return (
+              <button key={key} onClick={() => { setView(key); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 border-t border-white/5 ${active ? 'bg-indigo-500/15' : 'hover:bg-white/5'}`}>
+                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${active ? 'bg-indigo-400' : 'bg-white/20'}`} />
+                <span className={`text-xs font-bold flex items-center gap-2 ${active ? 'text-indigo-300' : 'text-white/50'}`}>
+                  {icon}{label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {report && (
+        <>
+          <button onClick={() => buildPDF(report, analytics)}
+            className="w-full px-5 py-3 rounded-xl text-white font-black uppercase tracking-wider text-xs transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 border border-white/20"
+            style={{ background: 'linear-gradient(135deg, #4f46e5, #2563eb)', boxShadow: '0 4px 20px rgba(99,102,241,0.4)' }}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export PDF
+          </button>
+
+          <button
+            onClick={() => { setDeleteError(''); setShowDeleteModal(true); }}
+            className="w-full px-5 py-3 rounded-xl font-black uppercase tracking-wider text-xs transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 border border-rose-500/30 hover:border-rose-400/50"
+            style={{
+              background: 'linear-gradient(135deg, rgba(244,63,94,0.15), rgba(190,18,60,0.12))',
+              color: '#fb7185',
+              boxShadow: '0 2px 12px rgba(244,63,94,0.15)',
+            }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete Records
+          </button>
+
+          {deleteError && (
+            <div className="rounded-xl border border-rose-500/30 px-3 py-2.5"
+              style={{ background: 'rgba(244,63,94,0.08)' }}>
+              <p className="text-[11px] text-rose-400 font-bold">{deleteError}</p>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+
   return (
     <div className="min-h-screen pb-20 relative">
       <style>{`
@@ -1274,6 +1361,10 @@ export default function Reports() {
         @keyframes slideDown {
           from { opacity: 0; transform: translateY(-10px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
         }
         select option { background-color: #1e3a5f; color: #f1f5f9; font-weight: 600; }
         input::-webkit-calendar-picker-indicator { filter: invert(1) brightness(0.7); cursor: pointer; opacity: 0.5; }
@@ -1289,12 +1380,42 @@ export default function Reports() {
         />
       )}
 
+      {/* Mobile sidebar drawer overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 lg:hidden"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', animation: 'fadeIn 0.2s ease-out' }}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Mobile sidebar drawer */}
+      <div
+        className={`fixed top-0 left-0 h-full z-50 w-72 overflow-y-auto flex flex-col gap-3 p-4 pt-6 lg:hidden transition-transform duration-300 ease-out`}
+        style={{
+          background: 'linear-gradient(160deg, rgba(15,20,50,0.98) 0%, rgba(10,15,40,0.99) 100%)',
+          borderRight: '1px solid rgba(255,255,255,0.08)',
+          transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        }}
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Options</span>
+          <button onClick={() => setSidebarOpen(false)}
+            className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border border-white/10 text-white/40 hover:text-white/70 transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <SidebarContent />
+      </div>
+
       {/* Page header */}
-      <div className="relative z-10 border-b border-white/8 mb-8"
+      <div className="relative z-10 border-b border-white/8 mb-6 sm:mb-8"
         style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)', backdropFilter: 'blur(20px)' }}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-7 sm:py-10">
           <div style={{ animation: 'slideDown 0.7s ease-out both' }}>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/15 mb-4"
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/15 mb-3 sm:mb-4"
               style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(59,130,246,0.15))' }}>
               <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
@@ -1302,139 +1423,57 @@ export default function Reports() {
               </span>
               <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">Inspection Analytics</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-lg">Reports</h1>
-            <p className="text-white/40 text-sm font-medium mt-2">Comprehensive inspection records, analytics, and exportable PDF.</p>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-lg">Reports</h1>
+                <p className="text-white/40 text-xs sm:text-sm font-medium mt-1 sm:mt-2">Comprehensive inspection records, analytics, and exportable PDF.</p>
+              </div>
+              {/* Mobile sidebar toggle button */}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border border-white/15 bg-white/5 text-white/50 hover:text-white/80 hover:border-white/25 transition-all text-[11px] font-black uppercase tracking-widest"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                <span className="hidden xs:inline">Options</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pb-12">
-        <div className="flex flex-col lg:flex-row gap-6 items-start" style={{ animation: 'slideUp 0.6s ease-out 0.1s both' }}>
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-start" style={{ animation: 'slideUp 0.6s ease-out 0.1s both' }}>
 
-          {/* Sticky sidebar */}
-          <div className="w-full lg:w-60 flex-shrink-0 lg:sticky lg:top-6 flex flex-col gap-4">
-
-            {selectedProject ? (
-              <div className={`${glassCard} p-4`} style={{ background: glassCardBg }}>
-                <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-3">Active Project</p>
-                <p className="text-xs font-black text-white/80 leading-snug mb-2">{selectedProject.name}</p>
-                <div className="flex items-center gap-2 mb-2">
-                  <Pill value={selectedProject.project_status}>{selectedProject.project_status}</Pill>
-                </div>
-                <div className="space-y-1 mt-3">
-                  {[
-                    ['Ref',      selectedProject.ref_number],
-                    ['Year',     selectedProject.year],
-                    ['Duration', selectedProject.duration],
-                  ].map(([k, v]) => (
-                    <div key={k} className="flex justify-between text-[10px]">
-                      <span className="text-white/30 font-bold uppercase tracking-widest">{k}</span>
-                      <span className="text-white/60 font-bold">{v || '\u2014'}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className={`${glassCard} p-4`} style={{ background: glassCardBg }}>
-                <p className="text-[9px] font-black text-white/25 uppercase tracking-widest mb-2">No project selected</p>
-                <p className="text-[11px] text-white/25">Pick a project to view its report.</p>
-              </div>
-            )}
-
-            {analytics && (
-              <div className={`${glassCard} p-4 flex items-center gap-3`} style={{ background: glassCardBg }}>
-                <AckRing pct={analytics.ackPct} />
-                <div>
-                  <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Ack. Rate</p>
-                  <p className="text-xs font-black text-white/70 mt-0.5">
-                    {report.summary.acknowledged_violations}/{report.summary.total_violations} violations
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {report && (
-              <div className={`${glassCard} overflow-hidden`} style={{ background: glassCardBg }}>
-                <p className="text-[9px] font-black text-white/30 uppercase tracking-widest px-4 pt-4 pb-2">View Mode</p>
-                {[
-                  { key: 'summary',  label: 'Summary',  icon: <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
-                  { key: 'detailed', label: 'Detailed', icon: <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg> },
-                ].map(({ key, label, icon }) => {
-                  const active = view === key;
-                  return (
-                    <button key={key} onClick={() => setView(key)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 border-t border-white/5 ${active ? 'bg-indigo-500/15' : 'hover:bg-white/5'}`}>
-                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${active ? 'bg-indigo-400' : 'bg-white/20'}`} />
-                      <span className={`text-xs font-bold flex items-center gap-2 ${active ? 'text-indigo-300' : 'text-white/50'}`}>
-                        {icon}{label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {report && (
-              <>
-                {/* Export PDF button */}
-                <button onClick={() => buildPDF(report, analytics)}
-                  className="w-full px-5 py-3 rounded-xl text-white font-black uppercase tracking-wider text-xs transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 border border-white/20"
-                  style={{ background: 'linear-gradient(135deg, #4f46e5, #2563eb)', boxShadow: '0 4px 20px rgba(99,102,241,0.4)' }}>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Export PDF
-                </button>
-
-                {/* Delete Records button */}
-                <button
-                  onClick={() => { setDeleteError(''); setShowDeleteModal(true); }}
-                  className="w-full px-5 py-3 rounded-xl font-black uppercase tracking-wider text-xs transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 border border-rose-500/30 hover:border-rose-400/50"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(244,63,94,0.15), rgba(190,18,60,0.12))',
-                    color: '#fb7185',
-                    boxShadow: '0 2px 12px rgba(244,63,94,0.15)',
-                  }}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Delete Records
-                </button>
-
-                {/* Inline error (if delete failed) */}
-                {deleteError && (
-                  <div className="rounded-xl border border-rose-500/30 px-3 py-2.5"
-                    style={{ background: 'rgba(244,63,94,0.08)' }}>
-                    <p className="text-[11px] text-rose-400 font-bold">{deleteError}</p>
-                  </div>
-                )}
-              </>
-            )}
+          {/* Desktop sidebar — hidden on mobile */}
+          <div className="hidden lg:flex w-60 flex-shrink-0 lg:sticky lg:top-6 flex-col gap-4">
+            <SidebarContent />
           </div>
 
           {/* Main content */}
           <div className="flex-1 min-w-0 space-y-4" style={{ animation: 'slideUp 0.6s ease-out 0.2s both' }}>
 
             {/* Filters */}
-            <div className={`${glassCard} p-5`} style={{ background: glassCardBg }}>
-              <div className="h-0.5 w-full rounded-t-2xl -mt-5 mb-5 rounded-t-2xl"
+            <div className={`${glassCard} p-4 sm:p-5`} style={{ background: glassCardBg }}>
+              <div className="h-0.5 w-full rounded-t-2xl -mt-4 sm:-mt-5 mb-4 sm:mb-5 rounded-t-2xl"
                 style={{ background: 'linear-gradient(90deg, #6366f1, #3b82f688)' }} />
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div className="md:col-span-2">
-                  <FieldLabel>Project</FieldLabel>
-                  <div className="relative">
-                    <select className={selectClass} value={projectId}
-                      onChange={(e) => setParams(e.target.value ? { project: e.target.value } : {})}>
-                      <option value="">— Select project —</option>
-                      {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
-                    <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+              {/* Project selector full-width on its own row */}
+              <div className="mb-3">
+                <FieldLabel>Project</FieldLabel>
+                <div className="relative">
+                  <select className={selectClass} value={projectId}
+                    onChange={(e) => setParams(e.target.value ? { project: e.target.value } : {})}>
+                    <option value="">— Select project —</option>
+                    {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                  <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
+              </div>
+              {/* Date + status filters in a 3-col grid */}
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <FieldLabel>From</FieldLabel>
                   <input type="date" className={inputClass} value={filters.from}
@@ -1455,7 +1494,7 @@ export default function Reports() {
                       <option>Pending</option>
                       <option>Overdue</option>
                     </select>
-                    <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
@@ -1463,8 +1502,55 @@ export default function Reports() {
               </div>
             </div>
 
+            {/* Mobile inline action bar — shows when report is loaded */}
+            {report && (
+              <div className="flex gap-2 lg:hidden">
+                <button onClick={() => buildPDF(report, analytics)}
+                  className="flex-1 px-4 py-2.5 rounded-xl text-white font-black uppercase tracking-wider text-[11px] transition-all active:scale-95 flex items-center justify-center gap-1.5 border border-white/20"
+                  style={{ background: 'linear-gradient(135deg, #4f46e5, #2563eb)', boxShadow: '0 4px 20px rgba(99,102,241,0.4)' }}>
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Export PDF
+                </button>
+                <button
+                  onClick={() => { setDeleteError(''); setShowDeleteModal(true); }}
+                  className="flex-1 px-4 py-2.5 rounded-xl font-black uppercase tracking-wider text-[11px] transition-all active:scale-95 flex items-center justify-center gap-1.5 border border-rose-500/30"
+                  style={{ background: 'rgba(244,63,94,0.12)', color: '#fb7185' }}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete
+                </button>
+              </div>
+            )}
+
+            {/* Mobile view mode toggle */}
+            {report && (
+              <div className="flex gap-2 lg:hidden">
+                {[
+                  { key: 'summary',  label: 'Summary' },
+                  { key: 'detailed', label: 'Detailed' },
+                ].map(({ key, label }) => {
+                  const active = view === key;
+                  return (
+                    <button key={key} onClick={() => setView(key)}
+                      className={`flex-1 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border ${
+                        active
+                          ? 'bg-indigo-500/20 border-indigo-400/40 text-indigo-300'
+                          : 'bg-white/4 border-white/10 text-white/40 hover:text-white/60'
+                      }`}>
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {!report && !projectId && (
-              <div className={`${glassCard} p-12 flex flex-col items-center justify-center gap-3 text-center`} style={{ background: glassCardBg }}>
+              <div className={`${glassCard} p-10 sm:p-12 flex flex-col items-center justify-center gap-3 text-center`} style={{ background: glassCardBg }}>
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5">
                   <svg className="w-6 h-6 text-white/25" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1476,13 +1562,13 @@ export default function Reports() {
 
             {report && (
               <>
-                {/* KPI Cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                {/* KPI Cards — 3 cols on mobile, 6 on md+ */}
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3">
                   {[
                     { label: 'Inspections',  value: report.summary.total_inspections,       color: '#3b82f6' },
                     { label: 'Violations',   value: report.summary.total_violations,        color: '#f43f5e' },
-                    { label: 'Acknowledged', value: report.summary.acknowledged_violations, color: '#10b981' },
-                    { label: 'Compliance %', value: `${analytics?.compliancePct ?? 0}%`,    color: '#6366f1' },
+                    { label: 'Ack.',         value: report.summary.acknowledged_violations, color: '#10b981' },
+                    { label: 'Compliance',   value: `${analytics?.compliancePct ?? 0}%`,    color: '#6366f1' },
                     { label: 'Manpower',     value: analytics?.totalManpower ?? 0,          color: '#f59e0b' },
                     { label: 'Photos',       value: analytics?.totalPhotos ?? 0,            color: '#64748b' },
                   ].map((kpi) => <KpiCard key={kpi.label} {...kpi} />)}
@@ -1490,7 +1576,7 @@ export default function Reports() {
 
                 {/* Project Info */}
                 <SectionCard title="Project Information" tone="blue">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                     <KV k="Project Name"          v={report.project.name} />
                     <KV k="Reference"             v={`${report.project.year || ''} \u2014 ${report.project.ref_number || ''}`} />
                     <KV k="Location"              v={report.project.location_name || report.project.location_id} />
@@ -1510,7 +1596,7 @@ export default function Reports() {
                   </div>
 
                   {report.project.approved_budget && report.project.contract_amount && (
-                    <div className="mt-5 pt-4 border-t border-white/8">
+                    <div className="mt-4 pt-4 border-t border-white/8">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Contract vs ABC</span>
                         <span className={`text-[10px] font-black ${
@@ -1538,9 +1624,9 @@ export default function Reports() {
                   )}
                 </SectionCard>
 
-                {/* Analytics grids */}
+                {/* Analytics grids — 1 col on mobile, 2 col on md+ */}
                 {analytics && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     <SectionCard title="Compliance Distribution">
                       <TableSimple headers={['Status', 'Count']}
                         rows={Object.entries(analytics.complianceCount).map(([k, v]) => [<Pill value={k}>{k}</Pill>, v])} />
@@ -1580,13 +1666,11 @@ export default function Reports() {
                 {view === 'summary' ? (
                   <SectionCard title="Inspection History">
                     <TableSimple
-                      headers={['#', 'Date', 'Inspector', 'Weather', 'Cleanliness', 'Compliance', 'Assessment', 'Status', 'Photos', 'Viol.']}
+                      headers={['#', 'Date', 'Inspector', 'Compliance', 'Assessment', 'Status', 'Photos', 'Viol.']}
                       rows={report.inspections.map((i, idx) => [
                         <span className="text-white/40 font-black">{idx + 1}</span>,
-                        dt(i.inspection_datetime),
+                        <span className="whitespace-nowrap">{dt(i.inspection_datetime)}</span>,
                         i.inspector_name,
-                        i.weather,
-                        <Pill value={i.site_cleanliness}>{i.site_cleanliness}</Pill>,
                         <Pill value={i.compliance_status}>{i.compliance_status}</Pill>,
                         <Pill value={i.overall_assessment}>{i.overall_assessment}</Pill>,
                         <Pill value={i.status}>{i.status}</Pill>,
@@ -1603,17 +1687,20 @@ export default function Reports() {
                         <div key={i.id} className={`${glassCard} overflow-hidden`} style={{ background: glassCardBg }}>
                           <div className="h-0.5 w-full"
                             style={{ background: open ? 'linear-gradient(90deg, #6366f1, #3b82f6)' : 'linear-gradient(90deg, #6366f133, #3b82f622)' }} />
-                          <div className="p-5">
-                            <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
-                              <div className="flex items-center gap-3 flex-wrap">
-                                <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">#{idx + 1}</span>
+                          <div className="p-4 sm:p-5">
+                            {/* Header row — stack on mobile */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-3">
+                              <div className="flex items-start sm:items-center gap-2 flex-wrap">
+                                <span className="text-[10px] font-black text-white/30 uppercase tracking-widest flex-shrink-0">#{idx + 1}</span>
                                 <span className="text-sm font-black text-white/80">{dt(i.inspection_datetime)}</span>
-                                <Pill value={i.compliance_status}>{i.compliance_status}</Pill>
-                                <Pill value={i.overall_assessment}>{i.overall_assessment}</Pill>
-                                <Pill value={i.status}>{i.status}</Pill>
+                                <div className="flex flex-wrap gap-1.5">
+                                  <Pill value={i.compliance_status}>{i.compliance_status}</Pill>
+                                  <Pill value={i.overall_assessment}>{i.overall_assessment}</Pill>
+                                  <Pill value={i.status}>{i.status}</Pill>
+                                </div>
                               </div>
                               <button
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-white/70 hover:border-white/25 transition-all text-[10px] font-black uppercase tracking-widest"
+                                className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-white/70 hover:border-white/25 transition-all text-[10px] font-black uppercase tracking-widest flex-shrink-0"
                                 onClick={() => setOpenId(open ? null : i.id)}>
                                 {open ? 'Collapse' : 'Expand'}
                                 <svg className={`w-3.5 h-3.5 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1622,15 +1709,16 @@ export default function Reports() {
                               </button>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                            {/* KV meta grid — 2 col on mobile, 4 col on md */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-3">
                               <KV k="Inspector"        v={i.inspector_name} />
                               <KV k="Weather"          v={`${i.weather}${i.weather_other ? ' \u00B7 ' + i.weather_other : ''}`} />
-                              <KV k="Site Cleanliness" v={<Pill value={i.site_cleanliness}>{i.site_cleanliness}</Pill>} />
-                              <KV k="Manpower Total"   v={(i.manpower || []).reduce((s, m) => s + Number(m.count || 0), 0)} />
+                              <KV k="Cleanliness"      v={<Pill value={i.site_cleanliness}>{i.site_cleanliness}</Pill>} />
+                              <KV k="Manpower"         v={(i.manpower || []).reduce((s, m) => s + Number(m.count || 0), 0)} />
                             </div>
 
                             {i.compliance_remarks && (
-                              <div className="rounded-xl border border-amber-400/20 px-4 py-3 mb-3"
+                              <div className="rounded-xl border border-amber-400/20 px-3 sm:px-4 py-2.5 sm:py-3 mb-3"
                                 style={{ background: 'rgba(245,158,11,0.07)' }}>
                                 <p className="text-[9px] font-black text-amber-400/70 uppercase tracking-widest mb-1">Compliance Remarks</p>
                                 <p className="text-xs text-white/60 font-medium">{i.compliance_remarks}</p>
@@ -1670,10 +1758,10 @@ export default function Reports() {
                                 </SectionCard>
                                 {(i.photos || []).length > 0 && (
                                   <SectionCard title={`Photo Documentation (${i.photos.length})`}>
-                                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                                       {i.photos.map((ph) => (
                                         <a key={ph.id} href={ph.file_path} target="_blank" rel="noreferrer" className="block">
-                                          <img src={ph.file_path} alt="" className="w-full h-24 object-cover rounded-xl border border-white/10 hover:border-white/30 hover:opacity-90 transition-all" />
+                                          <img src={ph.file_path} alt="" className="w-full h-20 sm:h-24 object-cover rounded-xl border border-white/10 hover:border-white/30 hover:opacity-90 transition-all" />
                                         </a>
                                       ))}
                                     </div>
@@ -1688,14 +1776,14 @@ export default function Reports() {
                                   {i.violations.length} Violation{i.violations.length > 1 ? 's' : ''} Recorded
                                 </p>
                                 {i.violations.map((v) => (
-                                  <div key={v.id} className="rounded-xl border border-rose-500/25 px-4 py-3"
+                                  <div key={v.id} className="rounded-xl border border-rose-500/25 px-3 sm:px-4 py-2.5 sm:py-3"
                                     style={{ background: 'rgba(244,63,94,0.07)' }}>
                                     <div className="text-xs font-bold text-white/70 mb-1"><span className="text-white/35">Description: </span>{v.description}</div>
                                     <div className="text-xs font-bold text-white/70 mb-1"><span className="text-white/35">Corrective Action: </span>{v.corrective_action}</div>
                                     {v.contractor_remarks && (
                                       <div className="text-xs font-bold text-white/70 mb-1"><span className="text-white/35">Contractor Remarks: </span>{v.contractor_remarks}</div>
                                     )}
-                                    <div className="flex items-center gap-3 mt-2">
+                                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
                                       <Pill value={v.acknowledged ? 'Acknowledged' : 'Pending'}>
                                         {v.acknowledged ? `Acknowledged${v.acknowledged_at ? ' \u00B7 ' + dt(v.acknowledged_at) : ''}` : 'Pending Acknowledgement'}
                                       </Pill>
