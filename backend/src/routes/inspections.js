@@ -144,12 +144,12 @@ router.post(
       );
 
       const files = req.files || [];
-      if (files.length) {
-        await conn.query(
-          'INSERT INTO photos (inspection_id, file_path) VALUES ?',
-          [files.map((f) => [inspectionId, `/uploads/${f.filename}`])]
-        );
-      }
+if (files.length) {
+  await conn.query(
+    'INSERT INTO photos (inspection_id, file_path) VALUES ?',
+    [files.map((f) => [inspectionId, f.path])]
+  );
+}
 
       // Decision logic — flag whether violation handling is required
       const needsViolation =

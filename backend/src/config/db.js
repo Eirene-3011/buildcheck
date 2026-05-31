@@ -1,5 +1,7 @@
 const mysql = require('mysql2/promise');
 
+const isLocal = (process.env.DB_HOST || 'localhost') === 'localhost';
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   port: Number(process.env.DB_PORT || 3306),
@@ -10,6 +12,7 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   multipleStatements: false,
   decimalNumbers: true,
+  ...(isLocal ? {} : { ssl: { rejectUnauthorized: true } }),
 });
 
 module.exports = pool;
